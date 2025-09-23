@@ -153,6 +153,11 @@ int main()
     return 0;
 }
 
+void AIPlayer::setDifficulty(Difficulty newDifficulty)
+{
+    this->difficulty = newDifficulty;
+}
+
 bool Board::checkWin(char symbol) const
 {
     for (int i = 0; i < size; ++i)

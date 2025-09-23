@@ -152,3 +152,48 @@ int main()
     cout << "\nThanks for playing!\n";
     return 0;
 }
+
+bool Board::checkWin(char symbol) const
+{
+    for (int i = 0; i < size; ++i)
+    {
+        bool rowWin = true;
+        bool colWin = true;
+        for (int j = 0; j < size; ++j)
+        {
+            if (grid[i][j] != symbol)
+                rowWin = false;
+            if (grid[j][i] != symbol)
+                colWin = false;
+        }
+        if (rowWin || colWin)
+            return true;
+    }
+
+    bool diag1Win = true;
+    for (int i = 0; i < size; ++i)
+    {
+        if (grid[i][i] != symbol)
+        {
+            diag1Win = false;
+            break;
+        }
+    }
+    if (diag1Win)
+        return true;
+
+    bool diag2Win = true;
+    for (int i = 0; i < size; ++i)
+    {
+        if (grid[i][size - 1 - i] != symbol)
+        {
+            diag2Win = false;
+            break;
+        }
+    }
+    if (diag2Win)
+        return true;
+
+    return false; 
+}
+

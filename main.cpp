@@ -227,3 +227,31 @@ void Game::start()
 
     displayResult();
 }
+void Game::handleHumanMove(Player &player)
+{
+    int row, col;
+    bool validMove = false;
+    while (!validMove)
+    {
+        cout << player.getName() << " (" << player.getSymbol() << "), enter your move (row and column): ";
+        cin >> row >> col;
+
+        if (cin.fail())
+        {
+            cout << "Invalid input. Please enter numbers only." << endl;
+            cin.clear(); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            continue;
+        }
+
+        if (board.isValidMove(row, col))
+        {
+            board.makeMove(row, col, player.getSymbol());
+            validMove = true;
+        }
+        else
+        {
+            cout << "Invalid move. Either the cell is taken or out of bounds. Try again." << endl;
+        }
+    }
+}

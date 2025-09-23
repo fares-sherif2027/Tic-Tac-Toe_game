@@ -197,3 +197,28 @@ bool Board::checkWin(char symbol) const
     return false; 
 }
 
+void Game::start()
+{
+    showMenu();
+
+    bool gameOver = false;
+    while (!gameOver)
+    {
+        board.display();
+
+        AIPlayer* aiPlayer = dynamic_cast<AIPlayer*>(currentPlayer);
+        if (aiPlayer) {
+            handleAIMove(*aiPlayer);
+        } else {
+            handleHumanMove(*currentPlayer);
+        }
+
+        gameOver = checkGameEnd();
+        if (!gameOver)
+        {
+            switchPlayer();
+        }
+    }
+
+    displayResult();
+}

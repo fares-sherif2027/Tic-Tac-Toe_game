@@ -28,8 +28,15 @@ public:
     bool makeMove(int row, int col, char symbol);
     // TODO boolean to indicate move success(symbol X/O) // hamody
 
-    bool isValidMove(int row, int col) const;
-    // TODO bool indicates if move is valid// fares
+    bool isValidMove(int row, int col) const
+    {
+        // TODO bool indicates if move is valid// fares
+        if (row < 0 || row >= size || col < 0 || col >= size)
+        {
+            return false;
+            return grid[row][col] == 0; // indicates empty cell
+        }
+    }
 
     bool checkWin(char symbol) const;
     // TODO bool check all win conditions // ramy
@@ -43,8 +50,11 @@ public:
     void reset();
     // TODO clear all cells to empty state// hamody
 
-    int getSize() const;
-    // TODO  getter function returns dimension of the board // fares
+    int getSize() const
+    {
+        // TODO  getter function returns dimension of the board // fares
+        return size;
+    }
 };
 
 class Player
@@ -57,17 +67,34 @@ public:
     Player(const string &name, char symbol);
     // TODO parameterized constructor //hana
 
-    virtual void getMove(int &row, int &col) = 0;
+    virtual void getMove(const Board &board, int &row, int &col) = 0;
     // TODO pure virtual implement in derived classes
 
     string getName() const;
     // TODO getter of player name //hamody
 
-    char getSymbol() const;
-    // TODO getter return player's symbol //fares
+    char getSymbol() const
+    {
+        // TODO getter return player's symbol //fares
+        return symbol;
+    }
 
     void setName(const string &name);
     // TODO setter of player's name // malak
+};
+
+class HumanPlayer : public Player
+{
+public:
+    HumanPlayer(const string &name, char symbol) : Player(name, symbol) {}
+
+    void getMove(const Board &board, int &row, int &col) override
+    {
+        cout << "Enter row: ";
+        cin >> row;
+        cout << "Enter column: ";
+        cin >> col;
+    }
 };
 
 class AIPlayer : public Player
@@ -79,8 +106,25 @@ public:
     AIPlayer(const string &name, char symbol, Difficulty difficulty);
     // TODO constructor
 
-    void getMove(int &row, int &col) override;
-    // TODO AI move depending on difficulty/////// fares
+    void getMove(const Board &board, int &row, int &col) override
+    {
+        // TODO AI move depending on difficulty/////// fares
+        switch (difficulty)
+        {
+        case Difficulty::Easy:
+            getRandomMOve(board, row, col);
+            break;
+        case Difficulty::Medium:
+            if (rand() % 2 == 0) // 0 logic work on easy mode, 1 logic work on hard mode, it's divided 50 50
+                getRandomMOve(board, row, col);
+            else
+                getBestMove(board, row, col);
+            break;
+        case Difficulty::Hard:
+            getBestMove(board, row, col);
+            break;
+        }
+    }
 
     void setDifficulty(Difficulty newDifficulty); // ramy
     // TODO change AI difficulty settings
@@ -88,7 +132,7 @@ public:
     void getRandomMOve(const Board &board, int &row, int &col) const;
     // TODO select random valid move for easy difficulty (can be used in getMove)//malak
 
-    void getBestMove(Board &board, int &row, int &col) const;
+    void getBestMove(const Board &board, int &row, int &col) const;
     // TODO find optimal move usng minimax algorithm///////hana
 
     int evaluateBoard(const Board &board) const;
@@ -97,9 +141,11 @@ public:
 
 class Game
 {
+private:
     Board board;
-    Player *player1;
-    Player *player2;
+    AIPlayer aiPlayer;
+    HumanPlayer *player1;
+    HumanPlayer *player2;
     Player *currentPlayer;
     Player *winner;
     Difficulty difficulty;
@@ -115,8 +161,25 @@ public:
     void showMenu();
     // TODO display selection menu   //hana
 
-    void setupPvP();
-    // TODO configure player vs player mode  //fares
+    void setupPvP()
+    {
+        // TODO configure player vs player mode  //fares
+        if (isPvP)
+        {
+            cout << "PvP mode" << endl;
+            string player1_Name;
+            string player2_Name;
+            char symbol1 = 'X';
+            char symbol2 = 'O';
+            cout << "Enter player1's name: ";
+            cin >> player1_Name;
+            cout << "Enter player2's name: ";
+            cin >> player2_Name;
+            player1 = new HumanPlayer(player1_Name, symbol1);
+            player2 = new HumanPlayer(player2_Name, symbol2);
+            currentPlayer = (currentPlayer == player1) ? player2 : player1;
+        }
+    }
 
     void setupPvc(Difficulty difficulty);
     // TODO configure player vs computer mode and concern difficulty // hamody
@@ -130,8 +193,19 @@ public:
     void handleAIMove(AIPlayer aiPlayer); // hana
     // TODO execute AI move
 
-    bool checkGameEnd();
-    // TODO check win conditions and board status// fares
+    bool checkGameEnd()
+    {
+        // TODO check win conditions and board status// fares
+        if (board.checkWin('X') || board.checkWin('O'))
+        {
+            return true; // Someone won
+        }
+        if (board.isFull())
+        {
+            return true; // Draw
+        }
+        return false; // Game continues
+    }
 
     void displayResult() const;
     // TODO show game outcome message // hamody

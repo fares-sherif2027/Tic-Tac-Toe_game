@@ -25,9 +25,16 @@ public:
     void display() const;
     // TODO display the borad //malak
 
-    bool makeMove(int row, int col, char symbol);
+    bool makeMove(int row, int col, char symbol)
+    {
     // TODO boolean to indicate move success(symbol X/O) // hamody
-
+        if(isValidMove(row, col))
+        {
+            grid[row][col] = symbol; 
+            return true;
+        }
+        return false;
+    }
     bool isValidMove(int row, int col) const
     {
         // TODO bool indicates if move is valid// fares
@@ -47,8 +54,17 @@ public:
     char getCell(int row, int col) const;
     // TODO getter return the symbol at specific coordinate // malak
 
-    void reset();
+    void reset()
+    {
     // TODO clear all cells to empty state// hamody
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                grid[i][j] = 0; 
+            }
+        }
+    }
 
     int getSize() const
     {
@@ -70,8 +86,11 @@ public:
     virtual void getMove(const Board &board, int &row, int &col) = 0;
     // TODO pure virtual implement in derived classes
 
-    string getName() const;
+    string getName() const
+    {
     // TODO getter of player name //hamody
+        return name;
+    }
 
     char getSymbol() const
     {
@@ -135,8 +154,16 @@ public:
     void getBestMove(const Board &board, int &row, int &col) const;
     // TODO find optimal move usng minimax algorithm///////hana
 
-    int evaluateBoard(const Board &board) const;
+    int evaluateBoard(const Board &board) const
+    {
     // TODO evaluate board score(win/loss/draw)//////hamody
+        if (board.checkWin(getSymbol()))
+            return +10; //computer wins 
+        else if (board.checkWin(getSymbol() == 'X' ? 'O' : 'X'))
+            return -10; // draw or still no winning ( i dont know what is the right logic yet :< )
+        return 0;
+
+    }
 };
 
 class Game
@@ -181,8 +208,24 @@ public:
         }
     }
 
-    void setupPvc(Difficulty difficulty);
+    void setupPvc(Difficulty difficulty)
+    {
     // TODO configure player vs computer mode and concern difficulty // hamody
+        cout << "PvC mode" << endl;
+        string playerName;
+        char humanSymbol = 'X';
+        char aiSymbol = 'O';
+
+        cout << "Enter your name: ";
+        cin >> playerName;
+
+        player1 = new HumanPlayer(playerName, humanSymbol);
+        aiPlayer = AIPlayer("Computer", aiSymbol, difficulty);
+
+        currentPlayer = player1; 
+        isPvP = false;
+
+    }
 
     void switchPlayer();
     // TODO alternate current player with other players  //malak
@@ -207,9 +250,16 @@ public:
         return false; // Game continues
     }
 
-    void displayResult() const;
+    void displayResult() const
+    {
     // TODO show game outcome message // hamody
-
+        if (board.checkWin('X'))
+        cout << "Player with symbol X wins\n";
+        else if (board.checkWin('O'))
+            cout << "Player with symbol O wins\n";
+        else
+            cout << "It's a draw!\n";
+    }
     void reset();
     // TODO reset game for new round// malak
 };

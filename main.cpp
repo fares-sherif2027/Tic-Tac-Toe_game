@@ -66,9 +66,49 @@ public:
         }
         return grid[row][col] == 0; // indicates empty cell
     }
+    bool checkWin(char symbol) const
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            bool rowWin = true;
+            bool colWin = true;
+            for (int j = 0; j < size; ++j)
+            {
+                if (grid[i][j] != symbol)
+                    rowWin = false;
+                if (grid[j][i] != symbol)
+                    colWin = false;
+            }
+            if (rowWin || colWin)
+                return true;
+        }
 
-    bool checkWin(char symbol) const;
-    // TODO bool check all win conditions // ramy
+        bool diag1Win = true;
+        for (int i = 0; i < size; ++i)
+        {
+            if (grid[i][i] != symbol)
+            {
+                diag1Win = false;
+                break;
+            }
+        }
+        if (diag1Win)
+            return true;
+
+        bool diag2Win = true;
+        for (int i = 0; i < size; ++i)
+        {
+            if (grid[i][size - 1 - i] != symbol)
+            {
+                diag2Win = false;
+                break;
+            }
+        }
+        if (diag2Win)
+            return true;
+
+        return false;
+    }
 
     bool isFull() const
     // TODO check if all cells are full //hana
@@ -177,8 +217,10 @@ private:
     Difficulty difficulty;
 
 public:
-    AIPlayer(const string &name, char symbol, Difficulty difficulty);
-    // TODO constructor
+    AIPlayer(const string &name, char symbol, Difficulty difficulty)
+        : Player(name, symbol), difficulty(difficulty)
+    {
+    }
 
     void getMove(const Board &board, int &row, int &col) override
     {
@@ -197,7 +239,11 @@ public:
         }
     }
 
-    void setDifficulty(Difficulty newDifficulty); // ramy
+    void setDifficulty(Difficulty newDifficulty)
+    {
+        this->difficulty = newDifficulty;
+    }
+
     // TODO change AI difficulty settings
     // TODO select random valid move for easy difficulty (can be used in getMove)//malak
     void getRandomMOve(const Board &board, int &row, int &col) const
@@ -348,11 +394,50 @@ private:
     bool isPvP; // flag: true = PvP, false = PvC
 
 public:
-    Game();
-    // TODO default constructor
+    Game()
+        // TODO default constructor
+        : board(3),
+          aiPlayer("Computer", 'O', Difficulty::Easy),
+          player1(nullptr),
+          player2(nullptr),
+          currentPlayer(nullptr),
+          winner(nullptr),
+          difficulty(Difficulty::Easy),
+          isPvP(false)
+    {
+    }
 
-    void start();
-    // TODO main game entry conrol overall flow  /// ramy
+    void start()
+    {
+        // TODO main game entry conrol overall flow  /// ramy
+
+        showMenu();
+
+        bool gameOver = false;
+        while (!gameOver)
+        {
+            board.display();
+            showBoardScore();
+
+            AIPlayer *aiPlayer = dynamic_cast<AIPlayer *>(currentPlayer);
+            if (aiPlayer)
+            {
+                handleAIMove(*aiPlayer);
+            }
+            else
+            {
+                handleHumanMove(*currentPlayer);
+            }
+
+            gameOver = checkGameEnd();
+            if (!gameOver)
+            {
+                switchPlayer();
+            }
+        }
+
+        displayResult();
+    }
 
     void showMenu()
     // TODO display selection menu   //hana
@@ -451,8 +536,35 @@ public:
         }
     }
 
-    void handleHumanMove(Player &player);
-    // TODO process human move and validate it // ramy
+    void handleHumanMove(Player &player)
+    {
+        // TODO process human move and validate it // ramy
+        int row, col;
+        bool validMove = false;
+        while (!validMove)
+        {
+            cout << player.getName() << " (" << player.getSymbol() << "), enter your move (row and column): ";
+            cin >> row >> col;
+
+            if (cin.fail())
+            {
+                cout << "Invalid input. Please enter numbers only." << endl;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                continue;
+            }
+
+            if (board.isValidMove(row, col))
+            {
+                board.makeMove(row, col, player.getSymbol());
+                validMove = true;
+            }
+            else
+            {
+                cout << "Invalid move. Either the cell is taken or out of bounds. Try again." << endl;
+            }
+        }
+    }
 
     void handleAIMove(AIPlayer &aiPlayer) // hana
     // TODO execute AI move
@@ -540,128 +652,4 @@ int main()
 
     cout << "\nThanks for playing!\n";
     return 0;
-}
-
-void AIPlayer::setDifficulty(Difficulty newDifficulty)
-{
-    this->difficulty = newDifficulty;
-}
-
-AIPlayer::AIPlayer(const string &name, char symbol, Difficulty difficulty)
-    : Player(name, symbol), difficulty(difficulty)
-{
-}
-
-bool Board::checkWin(char symbol) const
-{
-    for (int i = 0; i < size; ++i)
-    {
-        bool rowWin = true;
-        bool colWin = true;
-        for (int j = 0; j < size; ++j)
-        {
-            if (grid[i][j] != symbol)
-                rowWin = false;
-            if (grid[j][i] != symbol)
-                colWin = false;
-        }
-        if (rowWin || colWin)
-            return true;
-    }
-
-    bool diag1Win = true;
-    for (int i = 0; i < size; ++i)
-    {
-        if (grid[i][i] != symbol)
-        {
-            diag1Win = false;
-            break;
-        }
-    }
-    if (diag1Win)
-        return true;
-
-    bool diag2Win = true;
-    for (int i = 0; i < size; ++i)
-    {
-        if (grid[i][size - 1 - i] != symbol)
-        {
-            diag2Win = false;
-            break;
-        }
-    }
-    if (diag2Win)
-        return true;
-
-    return false;
-}
-
-Game::Game()
-    : board(3),
-      aiPlayer("Computer", 'O', Difficulty::Easy),
-      player1(nullptr),
-      player2(nullptr),
-      currentPlayer(nullptr),
-      winner(nullptr),
-      difficulty(Difficulty::Easy),
-      isPvP(false)
-{
-}
-
-void Game::start()
-{
-    showMenu();
-
-    bool gameOver = false;
-    while (!gameOver)
-    {
-        board.display();
-        showBoardScore();
-
-        AIPlayer *aiPlayer = dynamic_cast<AIPlayer *>(currentPlayer);
-        if (aiPlayer)
-        {
-            handleAIMove(*aiPlayer);
-        }
-        else
-        {
-            handleHumanMove(*currentPlayer);
-        }
-
-        gameOver = checkGameEnd();
-        if (!gameOver)
-        {
-            switchPlayer();
-        }
-    }
-
-    displayResult();
-}
-void Game::handleHumanMove(Player &player)
-{
-    int row, col;
-    bool validMove = false;
-    while (!validMove)
-    {
-        cout << player.getName() << " (" << player.getSymbol() << "), enter your move (row and column): ";
-        cin >> row >> col;
-
-        if (cin.fail())
-        {
-            cout << "Invalid input. Please enter numbers only." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-
-        if (board.isValidMove(row, col))
-        {
-            board.makeMove(row, col, player.getSymbol());
-            validMove = true;
-        }
-        else
-        {
-            cout << "Invalid move. Either the cell is taken or out of bounds. Try again." << endl;
-        }
-    }
 }

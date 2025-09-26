@@ -26,8 +26,9 @@ public:
     {
         grid.resize(size, vector<int>(size, 0));
     }
-        // TODO display the borad malak
-    void display() const{
+    // TODO display the borad malak
+    void display() const
+    {
         cout << "  ";
         for (int col = 0; col < size; col++)
         {
@@ -48,10 +49,10 @@ public:
     }
     bool makeMove(int row, int col, char symbol)
     {
-    // TODO boolean to indicate move success(symbol X/O) // hamody
-        if(isValidMove(row, col))
+        // TODO boolean to indicate move success(symbol X/O) // hamody
+        if (isValidMove(row, col))
         {
-            grid[row][col] = symbol; 
+            grid[row][col] = symbol;
             return true;
         }
         return false;
@@ -85,23 +86,23 @@ public:
         return true; // no empty cell->full board
     }
     // TODO getter return the symbol at specific coordinate // malak
-    char getCell(int row, int col) const{
+    char getCell(int row, int col) const
+    {
         if (row < 0 || row >= size || col < 0 || col >= size)
         {
             return '\0'; // invalid position
         }
         return grid[row][col];
     }
-    
 
     void reset()
     {
-    // TODO clear all cells to empty state// hamody
+        // TODO clear all cells to empty state// hamody
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
-                grid[i][j] = 0; 
+                grid[i][j] = 0;
             }
         }
     }
@@ -130,7 +131,7 @@ public:
 
     string getName() const
     {
-    // TODO getter of player name //hamody
+        // TODO getter of player name //hamody
         return name;
     }
 
@@ -144,7 +145,6 @@ public:
     {
         this->name = name;
     }
-
 };
 
 class HumanPlayer : public Player
@@ -159,6 +159,15 @@ public:
         cin >> row;
         cout << "Enter column: ";
         cin >> col;
+    }
+
+    int evaluateBoard(const Board &board) const
+    {
+        if (board.checkWin(getSymbol()))
+            return +10; // this player wins
+        else if (board.checkWin(getSymbol() == 'X' ? 'O' : 'X'))
+            return -10; // opponent wins
+        return 0;       // draw or ongoing
     }
 };
 
@@ -180,10 +189,7 @@ public:
             getRandomMOve(board, row, col);
             break;
         case Difficulty::Medium:
-            if (rand() % 2 == 0) // 0 logic work on easy mode, 1 logic work on hard mode, it's divided 50 50
-                getRandomMOve(board, row, col);
-            else
-                getBestMove(board, row, col);
+            getMediumMove(board, row, col);
             break;
         case Difficulty::Hard:
             getBestMove(board, row, col);
@@ -193,8 +199,8 @@ public:
 
     void setDifficulty(Difficulty newDifficulty); // ramy
     // TODO change AI difficulty settings
-// TODO select random valid move for easy difficulty (can be used in getMove)//malak
-void getRandomMOve(const Board &board, int &row, int &col) const
+    // TODO select random valid move for easy difficulty (can be used in getMove)//malak
+    void getRandomMOve(const Board &board, int &row, int &col) const
     {
         vector<pair<int, int>> availableMoves;
 
@@ -216,7 +222,7 @@ void getRandomMOve(const Board &board, int &row, int &col) const
             col = availableMoves[randomIndex].second;
         }
     }
-    
+
     // minimax algorithm
     int minimax(Board board, bool isMaximizing, char aiSymbol, char humanSymbol) const
     {
@@ -291,7 +297,8 @@ void getRandomMOve(const Board &board, int &row, int &col) const
                     Board temp = board;
                     temp.makeMove(i, j, aiSymbol);
 
-                    int score = minimax(temp, true, aiSymbol, humanSymbol);
+                    // FIX: After AI's move, it's human's turn
+                    int score = minimax(temp, false, aiSymbol, humanSymbol);
 
                     if (score > bestScore)
                     {
@@ -304,15 +311,27 @@ void getRandomMOve(const Board &board, int &row, int &col) const
         }
     }
 
+    // For medium mode: 50% random, 50% minimax
+    void getMediumMove(const Board &board, int &row, int &col) const
+    {
+        if (rand() % 2 == 0)
+        {
+            getRandomMOve(board, row, col);
+        }
+        else
+        {
+            getBestMove(board, row, col);
+        }
+    }
+
     int evaluateBoard(const Board &board) const
     {
-    // TODO evaluate board score(win/loss/draw)//////hamody
+        // TODO evaluate board score(win/loss/draw)//////hamody
         if (board.checkWin(getSymbol()))
-            return +10; //computer wins 
+            return +10; // computer wins
         else if (board.checkWin(getSymbol() == 'X' ? 'O' : 'X'))
-            return -10; // draw or still no winning ( i dont know what is the right logic yet :< )
+            return -10; // draw or still no winning
         return 0;
-
     }
 };
 
@@ -340,8 +359,9 @@ public:
     {
         cout << "1. Player vs Player" << endl;
         cout << "2. Player vs Computer (Easy)" << endl;
-        cout << "3. Player vs Computer (Hard)" << endl;
-        cout << "4. Exit" << endl;
+        cout << "3. Player vs Computer (Medium)" << endl;
+        cout << "4. Player vs Computer (Hard)" << endl;
+        cout << "5. Exit" << endl;
         cout << "==============================\n";
         cout << "Select game mode: " << endl;
         int choice;
@@ -362,12 +382,18 @@ public:
 
         case 3:
             isPvP = false;
-            difficulty = Difficulty::Hard;
+            difficulty = Difficulty::Medium;
             setupPvc(difficulty);
             break;
 
         case 4:
-            cout << "Exiting gane. Goodbye!" << endl;
+            isPvP = false;
+            difficulty = Difficulty::Hard;
+            setupPvc(difficulty);
+            break;
+
+        case 5:
+            cout << "Exiting game. Goodbye!" << endl;
             exit(0);
 
         default:
@@ -397,7 +423,7 @@ public:
 
     void setupPvc(Difficulty difficulty)
     {
-    // TODO configure player vs computer mode and concern difficulty // hamody
+        // TODO configure player vs computer mode and concern difficulty // hamody
         cout << "PvC mode" << endl;
         string playerName;
         char humanSymbol = 'X';
@@ -409,19 +435,21 @@ public:
         player1 = new HumanPlayer(playerName, humanSymbol);
         aiPlayer = AIPlayer("Computer", aiSymbol, difficulty);
 
-        currentPlayer = player1; 
+        currentPlayer = player1;
         isPvP = false;
-
     }
-     // TODO alternate current player with other players  //malak
-    void switchPlayer(){
-        if (isPvP) {
+    // TODO alternate current player with other players  //malak
+    void switchPlayer()
+    {
+        if (isPvP)
+        {
             currentPlayer = (currentPlayer == player1) ? player2 : player1;
-        } else {
-            currentPlayer = (currentPlayer == player1) ? static_cast<Player*>(&aiPlayer) : player1;
+        }
+        else
+        {
+            currentPlayer = (currentPlayer == player1) ? static_cast<Player *>(&aiPlayer) : player1;
         }
     }
-
 
     void handleHumanMove(Player &player);
     // TODO process human move and validate it // ramy
@@ -459,21 +487,46 @@ public:
 
     void displayResult() const
     {
-    // TODO show game outcome message // hamody
+        cout << "\n=== FINAL RESULT ===\n";
         if (board.checkWin('X'))
-        cout << "Player with symbol X wins\n";
+            cout << "Player with symbol X wins with score: " << player1->evaluateBoard(board) << endl;
         else if (board.checkWin('O'))
-            cout << "Player with symbol O wins\n";
+            cout << "Player with symbol O wins with score: " << player2->evaluateBoard(board) << endl;
         else
             cout << "It's a draw!\n";
+        cout << "====================\n";
     }
-        // TODO reset game for new round// malak
-    void reset(){
+    // TODO reset game for new round// malak
+    void reset()
+    {
         board.reset();
-        currentPlayer = player1; 
+        currentPlayer = player1;
         winner = nullptr;
     }
 
+    // Show board evaluation score for both players (PvP or PvC)
+    void showBoardScore() const
+    {
+        if (isPvP && player1 && player2)
+        {
+            HumanPlayer temp1(player1->getName(), player1->getSymbol());
+            HumanPlayer temp2(player2->getName(), player2->getSymbol());
+            int score1 = temp1.evaluateBoard(board);
+            int score2 = temp2.evaluateBoard(board);
+            cout << "Current board evaluation score (" << player1->getName() << ": " << player1->getSymbol() << ") = " << score1 << endl;
+            cout << "Current board evaluation score (" << player2->getName() << ": " << player2->getSymbol() << ") = " << score2 << endl;
+        }
+        else
+        {
+            int aiScore = aiPlayer.evaluateBoard(board);
+            char humanSymbol = (aiPlayer.getSymbol() == 'X') ? 'O' : 'X';
+            std::string humanName = player1 ? player1->getName() : "Human";
+            HumanPlayer tempHuman(humanName, humanSymbol);
+            int humanScore = tempHuman.evaluateBoard(board);
+            cout << "Current board evaluation score (AI): " << aiScore << endl;
+            cout << "Current board evaluation score (" << humanName << "): " << humanScore << endl;
+        }
+    }
 };
 
 int main()
@@ -540,7 +593,7 @@ bool Board::checkWin(char symbol) const
     if (diag2Win)
         return true;
 
-    return false; 
+    return false;
 }
 
 Game::Game()
@@ -563,11 +616,15 @@ void Game::start()
     while (!gameOver)
     {
         board.display();
+        showBoardScore();
 
-        AIPlayer* aiPlayer = dynamic_cast<AIPlayer*>(currentPlayer);
-        if (aiPlayer) {
+        AIPlayer *aiPlayer = dynamic_cast<AIPlayer *>(currentPlayer);
+        if (aiPlayer)
+        {
             handleAIMove(*aiPlayer);
-        } else {
+        }
+        else
+        {
             handleHumanMove(*currentPlayer);
         }
 
@@ -592,8 +649,8 @@ void Game::handleHumanMove(Player &player)
         if (cin.fail())
         {
             cout << "Invalid input. Please enter numbers only." << endl;
-            cin.clear(); 
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
         }
 
